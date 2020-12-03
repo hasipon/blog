@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>サーバ展開ツールmirrormanとマスタデータのgit管理について</title>
+<style>
+body {
+  margin: 0 auto;
+  padding: 8px;
+  max-width: 1140px;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>hasiponpages</h1>
+</header>
+<nav>
+<ul>
+<li><a href="../">Top page</a></li>
+</ul>
+</nav>
+<article>
+<h2>サーバ展開ツールmirrormanとマスタデータのgit管理について</h2>
+<p>この記事は、<a href="https://qiita.com/advent-calendar/2020/klab">KLab Advent Calendar 2020</a> の12/4分です。</p>
+<h3>はじめに</h3>
+<p>今年は、CEDEC2020で<a href="https://cedec.cesa.or.jp/2020/session/detail/s5e819523674da">『ラブライブ！スクールアイドルフェスティバル ALL STARS』を支えるビルドパイプライン　～より安定したサービス提供を目指して～</a>を発表することができました。スライドは<a href="https://www.klab.com/jp/blog/tech/2020/cedec2020.html">KLablog</a>でも公開されています。</p>
+<p>この記事では、CEDECで発表したgod環境へ、サーバ展開をするためのツールであるmirrormanを紹介します。また、mirrorman活用の前提の一つとなっている、マスタデータのgit管理も紹介します。</p>
+<p>注：この記事は前述のCEDECでの発表内容を前提としています。</p>
+<h3>mirrormanとは</h3>
+<p>mirrormanはローカルにあるbaseリポジトリ(git)とgod環境を操作するためのプログラムです。god環境を使う上では、各個人に割り当てられたgod環境へのサーバ展開は各自で行う必要があります。サーバ展開時にはgod環境上で各種処理を実行する必要がありますが、その作業を容易にするために、mirrormanというプログラムを用意しています。これによって、非開発者もgod環境を使えるようにするという体制になっています。</p>
+<p>mirrormanを使うには、基本的に、ローカルgitに展開したい状態をcommitしておく必要があります。mirrormanは、ローカルgitのHEADをgod環境へgit pushして、god上でgit checkout・各種自動生成の実行・サーバの再起動を実行します。ちなみに、pbagクライアント機能もmirrormanに入っています。</p>
+<p>mirrormanはGo言語で実装されています。非開発者も使うツールなので、実行バイナリを配るだけにして言語処理系を入れなくてもいいようにしたい、というのと、人によってwindowsだったりmacだったりlinuxだったりする環境なので、各OS向けの実行バイナリを作りたい、というのがGo言語を選択した主な理由です。</p>
+<p>mirrormanはコマンドラインアプリケーションで、最初はmirrormanを操作するためのUnityプラグインを用意してGUI化しようとしていましたが、結局コマンドライン操作が必要になることが多かったり、エラー出力が読みにくかったりで、mirrormanを操作するためのGUIは廃れてしまいました。</p>
+<h3>マスタデータのgit管理について</h3>
+<p>マスタデータはtsv形式でbaseリポジトリにcommitするという運用をしています。多様な需要を満たせるようにgod環境を増やすということをしていますが、マスタデータの変更は多様な需要として代表的なものです。</p>
+<p>gitブランチによって、多様なマスタデータに対応するという問題が解決されます。また、git管理にすることで、マスタデータのスキーマ変更への対応やマスタデータへの自動テストが容易になる、などの利点もあります。</p>
+<p>非開発者にもgitの学習コストがかかる、というのが当初の懸念でしたが、マスタデータを作る企画者がmirrormanからコマンドラインに慣れていって最終的には下手な開発者よりgitを使いこなしているのを見ると杞憂だったと思っています。</p>
+<p>git管理の前はGoogleスプレッドシートでマスタデータを管理していて、様々な手法で同様の問題に対処していましたが、git管理に移行することで問題を単純にすることができたと考えています。</p>
+<h3>おわりに</h3>
+<p>CEDECでの発表では話の流れと時間の関係でmirrormanの紹介を削ってしまったので、Advent Calendarという場で公開することができて良かったです。</p>
+</article>
+</body>
+</html>
