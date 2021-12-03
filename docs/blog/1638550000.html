@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>C#向けJSONデシリアライザ Hurisake.JsonDeserializer を作った</title>
+<style>
+body {
+  margin: 0 auto;
+  padding: 8px;
+  max-width: 1140px;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>hasiponpages</h1>
+</header>
+<nav>
+<ul>
+<li><a href="../">Top page</a></li>
+</ul>
+</nav>
+<article>
+<h2>C#向けJSONデシリアライザ Hurisake.JsonDeserializer を作った</h2>
+<p>この記事は、<a href="https://qiita.com/advent-calendar/2021/klab">KLab Advent Calendar 2021</a> の12/4分です。</p>
+<h3>作ったもの</h3>
+<ul>
+<li>repository: <a href="https://github.com/hasipon/Hurisake.JsonDeserializer">https://github.com/hasipon/Hurisake.JsonDeserializer</a></li>
+<li>NuGet: <a href="https://www.nuget.org/packages/Hurisake.JsonDeserializer/">https://www.nuget.org/packages/Hurisake.JsonDeserializer/</a></li>
+</ul>
+<p>Unity 2020.3.7 で動作確認しています。</p>
+<p>Unlicense なので、自由に copy, modify, publish, use, compile, sell, or distribute しちゃってください。</p>
+<h3>使い方</h3>
+<p><code>Hurisake.JsonDeserializer.Deseriaze(json)</code> でデシリアライズできます。 <code>json</code> は <code>string</code> または <code>byte[]</code> とします。</p>
+<p>例えば、 <code>[{"hoge": 42}]</code> をデシリアライズして 42 を取り出すには <code>(int)a[0]["hoge"]</code> でできます。</p>
+<h3>やりたかったこと</h3>
+<p>Unity で使えて、スキーマ定義しなくても使える系の JSON デシリアライザを自作しようと思って書きました。</p>
+<p>天下一 Game Battle Contest の API サーバで StackExchange.Redis を使っていたときに RedisKey と RedisValue が気に入ったので、影響を受けた設計になっています。</p>
+<h3>経緯</h3>
+<p>2017年の話ですが、 <a href="https://gist.github.com/darktable/1411710">MiniJSON</a> を使っていて、サーバに対する負荷試験をC#で書いていたら MiniJSON がボトルネックになった、ということがありました。 @methane さんによると、 System.IO.StringReader の Read や Peek が大量の futex システムコールを発生させていたのが原因でした。 mono の実装が原因だったのかもしれません (未調査) 。</p>
+<p>負荷試験は MiniJSON の修正や攻撃台数を増やすことで無事終わったのですが、 JSON デシリアライズが遅いというのはなんとかしたいと思い、更なる高速化に取り組んだ結果、 string インスタンスを作らないようにするのが一番効くという結論に至りました。可能な限り <code>byte[]</code> のまま処理して、Dictionary インスタンスの生成を避けたり、 JSON の object の key はハッシュ値にして比較したりといった高速化を実装し、改良版 MiniJSON 実装と比較して 4 倍くらい高速になることは確認しました。 Hurisake.JsonDeserializer には、それなりに違う形にはなっていますが、このときの経験を反映させています。</p>
+<h3>余談</h3>
+<p>ICFPC 2017 で 2 位になったのは、<a href="https://github.com/hasipon/icfpc2017/blob/master/AI3/hasi8.99/main.cpp">こんな感じ</a>で JSON 処理を自前で書いたのも、タイムアウトせずに最終ラウンドまで残れた一因では、という疑いを持ってたりします。ちょうど上記の高速化をやってた時期だったので、調子に乗って実装していた記憶があります。</p>
+<h3>性能比較</h3>
+<p><a href="https://github.com/neuecc/Utf8Json">neuecc/Utf8Json</a> の <code>Utf8Json.JsonSerializer.Deserialize&lt;dynamic&gt;</code> と雑に比較しました。同じぐらいの時間でデシリアライズでき、 Hurisake.JsonValue は dynamic より高速な要素参照を実現できています。</p>
+<p><a href="https://gist.github.com/hasipon/071d1c92618aea26788b37746a0d21f8">計測プログラム</a>： 2つのキーを持つ object 30万要素の array をデシリアライズし、一方の値を合計する。</p>
+<p>計測環境：<br>
+Amazon EC2 t3.micro<br>
+Ubuntu Server 20.04 LTS (HVM), SSD Volume Type - ami-059b6d3840b03d6dd (64-bit x86)<br>
+dotnet 5.0.201</p>
+<p>Deserializeの時間比較： (単位: ミリ秒、試行回数15回)<br><img src="1638550000/deserialize.png" alt="" width="257" height="461"></p>
+<p>要素参照の時間比較： (単位: ミリ秒、試行回数15回)<br><img src="1638550000/access.png" alt="" width="257" height="461"></p>
+<h3>Unity 対応の話</h3>
+<p>最初 Unity を気にせずに書いてしまっていて、 System.Collections.Immutable とか ReadOnlySpan を使っていたら、 Unity では使えなかった🙃 となりました。使う方法はあるっぽいですが、 Hurisake.JsonDeserializer は無くても動くように修正してあります。</p>
+<h3>Hurisake って何？</h3>
+<p>「天の原<strong>ふりさけ</strong>見れば春日なるみかさの山に出でし月かも -- 阿倍仲麻呂」から取ってます。小倉百人一首から「でし」を含む歌を選びました。深い意味は無いですが、検索しやすいようにする意図はあります。後付けですが、転勤して帰郷した今年の自分に合っている和歌な気もします。</p>
+<h3>おわりに</h3>
+<p>指摘・意見歓迎です。もしありましたら <a href="https://github.com/hasipon/Hurisake.JsonDeserializer/issues">Issues</a> にお願いします。</p>
+</article>
+</body>
+</html>
